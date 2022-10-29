@@ -2,7 +2,6 @@ package app
 
 import (
 	"tipo-server/app/database"
-	"tipo-server/app/models"
 
 	"github.com/gorilla/mux"
 )
@@ -10,7 +9,6 @@ import (
 type App struct {
 	Router *mux.Router
 	DB     database.TipoDB
-	ENV    *models.Config
 }
 
 func New() *App {
@@ -25,4 +23,5 @@ func New() *App {
 func (a *App) initRoutes() {
 	a.Router.HandleFunc("/", a.IndexHandler()).Methods("get")
 	a.Router.HandleFunc("/api/check-word", a.CheckWordHandler()).Methods("post")
+	a.Router.HandleFunc("/api/google/login-url", a.GetGoogleLoginUrl()).Methods("get")
 }

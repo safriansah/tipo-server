@@ -61,3 +61,17 @@ func (a *App) CheckWordHandler() http.HandlerFunc {
 		sendResponse(w, r, newWord, http.StatusOK)
 	}
 }
+
+func (a *App) GetGoogleLoginUrl() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		url, err := clients.GetGoogleLoginUrl()
+		if err != nil {
+			log.Printf("error get url, err=%v\n", err)
+			sendResponse(w, r, nil, http.StatusInternalServerError)
+			return
+		}
+		sendResponse(w, r, models.GoogleUrlResponse{
+			Url: url,
+		}, http.StatusOK)
+	}
+}

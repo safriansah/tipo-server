@@ -7,10 +7,11 @@ import (
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"github.com/spf13/viper"
 )
 
 type TipoDB interface {
-	Open(config models.Config) error
+	Open() error
 	Close() error
 	CreateWord(*models.Word) (*models.Word, error)
 	FindWordByInput(*string) (*models.Word, error)
@@ -20,8 +21,8 @@ type DB struct {
 	db *gorm.DB
 }
 
-func (d *DB) Open(config models.Config) error {
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s", config.DB_HOST, config.DB_PORT, config.DB_USER, config.DB_PASS, config.DB_NAME, config.DB_SSL)
+func (d *DB) Open() error {
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s", viper.GetString("DB_HOST"), viper.GetInt("DB_PORT"), viper.GetString("DB_USER"), viper.GetString("DB_PASS"), viper.GetString("DB_NAME"), viper.GetString("DB_SSL"))
 	pg, err := gorm.Open("postgres", psqlInfo)
 	if err != nil {
 		return err

@@ -5,23 +5,23 @@ import (
 	"net/http"
 	"os"
 	"tipo-server/app"
+	"tipo-server/app/clients"
 	"tipo-server/app/database"
-	"tipo-server/app/models"
 
 	"github.com/spf13/viper"
 )
 
 func main() {
-	app := app.New()
-
-	config, err := LoadConfig(".")
+	err := LoadConfig(".")
 	check(err)
-	app.ENV = &config
 
-	port := config.PORT
+	port := viper.GetString("PORT")
 
+	clients.InitializeOAuthGoogle()
+
+	app := app.New()
 	app.DB = &database.DB{}
-	err = app.DB.Open(config)
+	err = app.DB.Open()
 	check(err)
 
 	defer app.DB.Close()
@@ -40,7 +40,7 @@ func check(e error) {
 	}
 }
 
-func LoadConfig(path string) (config models.Config, err error) {
+func LoadConfig(path string) (err error) {
 	viper.AddConfigPath(path)
 	viper.SetConfigName("app")
 	viper.SetConfigType("env")
@@ -52,7 +52,6 @@ func LoadConfig(path string) (config models.Config, err error) {
 		return
 	}
 
-	err = viper.Unmarshal(&config)
 	return
 }
 
