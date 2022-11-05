@@ -20,6 +20,8 @@ func (a *App) IndexHandler() http.HandlerFunc {
 
 func (a *App) CheckWordHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		userId := r.Header["User-Id"]
+		log.Printf("userId::%v", userId[0])
 		req := models.PostWord{}
 		err := parse(w, r, &req)
 
@@ -158,5 +160,11 @@ func (a *App) GoogleLoginCallback() http.HandlerFunc {
 		log.Printf("userToken::%v", userToken)
 
 		http.Redirect(w, r, "/api/google/dashboard?token="+token, http.StatusTemporaryRedirect)
+	}
+}
+
+func (a *App) GetMyProfile() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
 	}
 }
