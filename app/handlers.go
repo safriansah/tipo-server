@@ -7,6 +7,7 @@ import (
 	"strings"
 	"tipo-server/app/clients"
 	"tipo-server/app/models"
+	"tipo-server/app/utils"
 
 	"github.com/jinzhu/gorm"
 )
@@ -94,15 +95,13 @@ func (a *App) GoogleLoginCallback() http.HandlerFunc {
 			return
 		}
 		if user.ID == 0 {
-			user = &models.User{
+			user, err = a.DB.SaveUser(&models.User{
 				ID:       0,
 				Name:     data.Name,
 				Username: strings.Split(data.Email, "@")[0],
 				Email:    data.Email,
 				Picture:  data.Picture,
-			}
-
-			user, err = a.DB.SaveUser(user)
+			})
 			if err != nil {
 				log.Printf("a.DB.SaveUser, err=%v\n", err)
 				http.Redirect(w, r, "/api/google/error", http.StatusTemporaryRedirect)
@@ -127,7 +126,7 @@ func (a *App) GoogleLoginCallback() http.HandlerFunc {
 				return
 			}
 		} else {
-			googleToken = &models.UserGoogleToken{
+			googleToken, err = a.DB.SaveUserGoogleToken(&models.UserGoogleToken{
 				ID:           0,
 				UserId:       user.ID,
 				GoogleId:     data.Id,
@@ -135,15 +134,29 @@ func (a *App) GoogleLoginCallback() http.HandlerFunc {
 				RefreshToken: data.RefreshToken,
 				TokenType:    data.TokenType,
 				Expiry:       data.Expiry,
-			}
-			googleToken, err = a.DB.SaveUserGoogleToken(googleToken)
+			})
 			if err != nil {
 				http.Redirect(w, r, "/api/google/error", http.StatusTemporaryRedirect)
 				return
 			}
+			log.Printf("googleToken::%v", googleToken)
 		}
 
-		log.Printf("googleToken::%v", googleToken)
-		sendResponse(w, r, user, http.StatusOK)
+		token, err := utils.CreateJWTToken(user)
+		if err != nil {
+			http.Redirect(w, r, "/api/google/error", http.StatusTemporaryRedirect)
+			return
+		}
+		userToken, err := a.DB.SaveUserToken(&models.UserToken{
+			UserId: user.ID,
+			Token:  token,
+		})
+		if err != nil {
+			http.Redirect(w, r, "/api/google/error", http.StatusTemporaryRedirect)
+			return
+		}
+		log.Printf("userToken::%v", userToken)
+
+		http.Redirect(w, r, "/api/google/dashboard?token="+token, http.StatusTemporaryRedirect)
 	}
 }
