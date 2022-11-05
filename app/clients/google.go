@@ -1,9 +1,13 @@
 package clients
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
 	"log"
+	"net/http"
 	"net/url"
-	"strings"
+	"tipo-server/app/models"
 
 	"github.com/spf13/viper"
 	"golang.org/x/oauth2"
@@ -11,12 +15,15 @@ import (
 )
 
 var (
-	oauthConfig = &oauth2.Config{
+	conf = &oauth2.Config{
 		ClientID:     "",
 		ClientSecret: "",
 		RedirectURL:  "",
-		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
-		Endpoint:     google.Endpoint,
+		Scopes: []string{
+			"https://www.googleapis.com/auth/userinfo.email",
+			"https://www.googleapis.com/auth/userinfo.profile",
+		},
+		Endpoint: google.Endpoint,
 	}
 	oauthState = ""
 )
@@ -25,26 +32,49 @@ var (
 InitializeOAuthGoogle Function
 */
 func InitializeOAuthGoogle() {
-	oauthConfig.ClientID = viper.GetString("GOOGLE_CLIENT_ID")
-	oauthConfig.ClientSecret = viper.GetString("GOOGLE_CLIENT_SECRET")
-	oauthState = viper.GetString("GOOGLE_OAUTH_STATE_STRING")
-	oauthConfig.RedirectURL = viper.GetString("GOOGLE_CALLBACK_URL")
+	conf.ClientID = viper.GetString("GOOGLE_CLIENT_ID")
+	conf.ClientSecret = viper.GetString("GOOGLE_CLIENT_SECRET")
+	oauthState = viper.GetString("GOOGLE_OAUTH_STATE")
+	conf.RedirectURL = viper.GetString("GOOGLE_CALLBACK_URL")
 }
 
-func GetGoogleLoginUrl() (loginUrl string, err error) {
-	URL, err := url.Parse(oauthConfig.Endpoint.AuthURL)
+func GetGoogleOauthState() (state string) {
+	return oauthState
+}
+
+func GetGoogleLoginUrl() (loginUrl string) {
+	loginUrl = conf.AuthCodeURL(oauthState)
+	return loginUrl
+}
+
+func HandleGoogleCodeExcange(code string) (result *models.GoogleProfile, err error) {
+	code, err = url.QueryUnescape(code)
 	if err != nil {
-		log.Println("Parse: " + err.Error())
-		return loginUrl, err
+		log.Printf("HandleGoogleCodeExcange::url.QueryUnescape::%v", err)
+		return nil, err
 	}
-	log.Println(URL.String())
-	parameters := url.Values{}
-	parameters.Add("client_id", oauthConfig.ClientID)
-	parameters.Add("scope", strings.Join(oauthConfig.Scopes, " "))
-	parameters.Add("redirect_uri", oauthConfig.RedirectURL)
-	parameters.Add("response_type", "code")
-	parameters.Add("state", oauthState)
-	URL.RawQuery = parameters.Encode()
-	loginUrl = URL.String()
-	return loginUrl, err
+	token, err := conf.Exchange(context.Background(), code)
+	if err != nil {
+		log.Printf("HandleGoogleCodeExcange::conf.Exchange::%v", err)
+		return nil, err
+	}
+
+	res, err := http.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + url.QueryEscape(token.AccessToken))
+	if err != nil {
+		log.Printf("Get: " + err.Error() + "\n")
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if err = json.NewDecoder(res.Body).Decode(&result); err != nil {
+		fmt.Printf("FetchCheckTypo::json.NewDecoder::%v", err)
+		return nil, err
+	}
+
+	result.AccessToken = token.AccessToken
+	result.TokenType = token.TokenType
+	result.RefreshToken = token.RefreshToken
+	result.Expiry = token.Expiry
+
+	return result, nil
 }

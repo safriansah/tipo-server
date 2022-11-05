@@ -13,8 +13,16 @@ import (
 type TipoDB interface {
 	Open() error
 	Close() error
+
 	CreateWord(*models.Word) (*models.Word, error)
 	FindWordByInput(*string) (*models.Word, error)
+
+	SaveUserGoogleToken(*models.UserGoogleToken) (*models.UserGoogleToken, error)
+	FindGoogleTokenByUserId(*uint) (*models.UserGoogleToken, error)
+	UpdateGoogleToken(*models.UserGoogleToken) error
+
+	SaveUser(*models.User) (*models.User, error)
+	FindUserByEmail(*string) (*models.User, error)
 }
 
 type DB struct {
@@ -33,7 +41,11 @@ func (d *DB) Open() error {
 	d.db.LogMode(true)
 
 	var word models.Word
+	var user models.User
+	var userGoogleToken models.UserGoogleToken
 	pg.AutoMigrate(&word)
+	pg.AutoMigrate(&user)
+	pg.AutoMigrate(&userGoogleToken)
 	log.Println("run migration")
 
 	return nil

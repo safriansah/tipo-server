@@ -23,3 +23,7 @@ func sendResponse(w http.ResponseWriter, _ *http.Request, data interface{}, stat
 		log.Printf("cannot format json, err=%v\n", err)
 	}
 }
+
+func getUintPointer(value uint) *uint {
+	return &value
+}

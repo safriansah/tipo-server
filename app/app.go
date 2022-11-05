@@ -19,9 +19,3 @@ func New() *App {
 	a.initRoutes()
 	return a
 }
-
-func (a *App) initRoutes() {
-	a.Router.HandleFunc("/", a.IndexHandler()).Methods("get")
-	a.Router.HandleFunc("/api/check-word", a.CheckWordHandler()).Methods("post")
-	a.Router.HandleFunc("/api/google/login-url", a.GetGoogleLoginUrl()).Methods("get")
-}

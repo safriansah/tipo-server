@@ -2,14 +2,17 @@ package clients
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 	"tipo-server/app/models"
+
+	"github.com/spf13/viper"
 )
 
 func FetchCheckTypo(input string) (result *string, err error) {
-	url := "http://localhost:3001/api/v1/checkTypo"
+	url := viper.GetString("TIPO_URL") + "/api/v1/checkTypo"
 	method := "POST"
 
 	payload := strings.NewReader(`{
@@ -39,6 +42,11 @@ func FetchCheckTypo(input string) (result *string, err error) {
 	if err := json.NewDecoder(res.Body).Decode(&data); err != nil {
 		fmt.Printf("FetchCheckTypo::json.NewDecoder::%v", err)
 		return nil, err
+	}
+
+	if !data.IsSuccess {
+		fmt.Printf("FetchCheckTypo::data::%v", data.Message)
+		return nil, errors.New(data.Message)
 	}
 
 	return &data.Result, nil
