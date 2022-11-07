@@ -25,6 +25,8 @@ type TipoDB interface {
 	FindUserByEmail(*string) (*models.User, error)
 
 	SaveUserToken(*models.UserToken) (*models.UserToken, error)
+
+	SaveUserLog(*models.UserLog) (*models.UserLog, error)
 }
 
 type DB struct {
@@ -53,6 +55,9 @@ func (d *DB) Open() error {
 
 	var userToken models.UserToken
 	pg.AutoMigrate(&userToken)
+
+	var userLog models.UserLog
+	pg.AutoMigrate(&userLog)
 
 	log.Println("run migration")
 

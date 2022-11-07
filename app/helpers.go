@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 func parse(w http.ResponseWriter, r *http.Request, data interface{}) error {
@@ -26,4 +27,12 @@ func sendResponse(w http.ResponseWriter, _ *http.Request, data interface{}, stat
 
 func getUintPointer(value uint) *uint {
 	return &value
+}
+
+func stringToUint(value string) (uint, error) {
+	u64, err := strconv.ParseUint(value, 10, 32)
+	if err != nil {
+		return 0, err
+	}
+	return uint(u64), err
 }

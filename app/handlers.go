@@ -20,11 +20,16 @@ func (a *App) IndexHandler() http.HandlerFunc {
 
 func (a *App) CheckWordHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userId := r.Header["User-Id"]
-		log.Printf("userId::%v", userId[0])
-		req := models.PostWord{}
-		err := parse(w, r, &req)
+		headerUserId := r.Header["User-Id"][0]
+		userId, err := stringToUint(headerUserId)
+		if err != nil {
+			log.Printf("stringToUint, err=%v\n", err)
+			sendResponse(w, r, nil, http.StatusBadRequest)
+			return
+		}
 
+		req := models.PostWord{}
+		err = parse(w, r, &req)
 		if err != nil {
 			log.Printf("cannot parse body, err=%v\n", err)
 			sendResponse(w, r, nil, http.StatusBadRequest)
@@ -37,32 +42,37 @@ func (a *App) CheckWordHandler() http.HandlerFunc {
 			sendResponse(w, r, nil, http.StatusInternalServerError)
 			return
 		}
-		if word.ID != 0 {
-			sendResponse(w, r, word, http.StatusOK)
-			return
+		if word.ID == 0 {
+			result, err := clients.FetchCheckTypo(req.Input)
+			if err != nil {
+				log.Printf("cannot parse body, err=%v\n", err)
+				sendResponse(w, r, nil, http.StatusBadRequest)
+				return
+			}
+
+			word, err = a.DB.CreateWord(&models.Word{
+				Input:  req.Input,
+				Result: *result,
+			})
+			if err != nil {
+				log.Printf("cannot save word in db, err=%v\n", err)
+				sendResponse(w, r, nil, http.StatusInternalServerError)
+				return
+			}
 		}
 
-		result, err := clients.FetchCheckTypo(req.Input)
-		if err != nil {
-			log.Printf("cannot parse body, err=%v\n", err)
-			sendResponse(w, r, nil, http.StatusBadRequest)
-			return
-		}
-
-		newWord := &models.Word{
-			ID:     0,
-			Input:  req.Input,
-			Result: *result,
-		}
-
-		newWord, err = a.DB.CreateWord(newWord)
+		ulog, err := a.DB.SaveUserLog(&models.UserLog{
+			UserId: userId,
+			WordId: word.ID,
+		})
 		if err != nil {
 			log.Printf("cannot save word in db, err=%v\n", err)
 			sendResponse(w, r, nil, http.StatusInternalServerError)
 			return
 		}
+		log.Printf("ulog::%v", ulog)
 
-		sendResponse(w, r, newWord, http.StatusOK)
+		sendResponse(w, r, word, http.StatusOK)
 	}
 }
 
