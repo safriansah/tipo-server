@@ -7,6 +7,7 @@ import (
 	"tipo-server/app"
 	"tipo-server/app/clients"
 	"tipo-server/app/database"
+	"tipo-server/app/utils"
 
 	"github.com/spf13/viper"
 )
@@ -18,6 +19,8 @@ func main() {
 	port := viper.GetString("PORT")
 
 	clients.InitializeOAuthGoogle()
+
+	utils.SetJWTKey()
 
 	app := app.New()
 	app.DB = &database.DB{}

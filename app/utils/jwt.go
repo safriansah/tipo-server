@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"fmt"
+	"log"
 	"net/http"
 	"time"
 	"tipo-server/app/models"
@@ -9,7 +11,11 @@ import (
 	"github.com/spf13/viper"
 )
 
-var jwtKey = []byte(viper.GetString("JWT_KEY"))
+var jwtKey = []byte("")
+
+func SetJWTKey() {
+	jwtKey = []byte(viper.GetString("JWT_KEY"))
+}
 
 func CreateJWTToken(user *models.User) (string, error) {
 	expirationTime := time.Now().Add(30 * 24 * time.Hour)
@@ -36,7 +42,8 @@ func CheckJWTToken(token *string) (int, *models.JWTClaims) {
 		return jwtKey, nil
 	})
 	if err != nil {
-		if err == jwt.ErrSignatureInvalid {
+		if fmt.Sprint(err) == fmt.Sprint(jwt.ErrSignatureInvalid) {
+			log.Print("masuk err")
 			return http.StatusUnauthorized, nil
 		}
 		return http.StatusBadRequest, nil
