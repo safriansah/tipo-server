@@ -27,6 +27,7 @@ type TipoDB interface {
 	SaveUserToken(*models.UserToken) (*models.UserToken, error)
 
 	SaveUserLog(*models.UserLog) (*models.UserLog, error)
+	FindUserLogByUserId(uint) (*[]models.UserLog, error)
 }
 
 type DB struct {

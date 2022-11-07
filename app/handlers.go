@@ -173,8 +173,23 @@ func (a *App) GoogleLoginCallback() http.HandlerFunc {
 	}
 }
 
-func (a *App) GetMyProfile() http.HandlerFunc {
+func (a *App) GetMyLog() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		headerUserId := r.Header["User-Id"][0]
+		userId, err := stringToUint(headerUserId)
+		if err != nil {
+			log.Printf("stringToUint, err=%v\n", err)
+			sendResponse(w, r, nil, http.StatusBadRequest)
+			return
+		}
+		log.Printf("userId::%v", userId)
 
+		ulogs, err := a.DB.FindUserLogByUserId(userId)
+		if err != nil && err.Error() != gorm.ErrRecordNotFound.Error() {
+			log.Printf("FindUserLogByUserId, err=%v\n", err)
+			sendResponse(w, r, nil, http.StatusInternalServerError)
+			return
+		}
+		sendResponse(w, r, ulogs, http.StatusOK)
 	}
 }
