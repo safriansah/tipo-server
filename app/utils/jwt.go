@@ -4,17 +4,17 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 	"tipo-server/app/models"
 
 	"github.com/golang-jwt/jwt"
-	"github.com/spf13/viper"
 )
 
 var jwtKey = []byte("")
 
 func SetJWTKey() {
-	jwtKey = []byte(viper.GetString("JWT_KEY"))
+	jwtKey = []byte(os.Getenv("JWT_KEY"))
 }
 
 func CreateJWTToken(user *models.User) (string, error) {

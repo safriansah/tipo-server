@@ -9,14 +9,17 @@ import (
 	"tipo-server/app/database"
 	"tipo-server/app/utils"
 
-	"github.com/spf13/viper"
+	"github.com/joho/godotenv"
 )
 
 func main() {
-	err := LoadConfig(".")
-	check(err)
+	err := godotenv.Load(".env")
 
-	port := viper.GetString("PORT")
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
+
+	port := os.Getenv("PORT")
 
 	clients.InitializeOAuthGoogle()
 
@@ -41,21 +44,6 @@ func check(e error) {
 		log.Println(e)
 		os.Exit(1)
 	}
-}
-
-func LoadConfig(path string) (err error) {
-	viper.AddConfigPath(path)
-	viper.SetConfigName("app")
-	viper.SetConfigType("env")
-
-	viper.AutomaticEnv()
-
-	err = viper.ReadInConfig()
-	if err != nil {
-		return
-	}
-
-	return
 }
 
 // https://dev.to/lucasnevespereira/write-a-rest-api-in-golang-following-best-practices-pe9

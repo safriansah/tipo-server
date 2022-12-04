@@ -3,11 +3,11 @@ package database
 import (
 	"fmt"
 	"log"
+	"os"
 	"tipo-server/app/models"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
-	"github.com/spf13/viper"
 )
 
 type TipoDB interface {
@@ -35,7 +35,7 @@ type DB struct {
 }
 
 func (d *DB) Open() error {
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s", viper.GetString("DB_HOST"), viper.GetInt("DB_PORT"), viper.GetString("DB_USER"), viper.GetString("DB_PASS"), viper.GetString("DB_NAME"), viper.GetString("DB_SSL"))
+	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s", os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_USER"), os.Getenv("DB_PASS"), os.Getenv("DB_NAME"), os.Getenv("DB_SSL"))
 	pg, err := gorm.Open("postgres", psqlInfo)
 	if err != nil {
 		return err

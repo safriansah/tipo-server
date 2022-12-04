@@ -5,14 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 	"tipo-server/app/models"
-
-	"github.com/spf13/viper"
 )
 
 func FetchCheckTypo(input string) (result *string, err error) {
-	url := viper.GetString("TIPO_URL") + "/api/v1/checkTypo"
+	url := os.Getenv("TIPO_URL") + "/api/v1/checkTypo"
 	method := "POST"
 
 	payload := strings.NewReader(`{

@@ -7,9 +7,9 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"tipo-server/app/models"
 
-	"github.com/spf13/viper"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
@@ -32,10 +32,10 @@ var (
 InitializeOAuthGoogle Function
 */
 func InitializeOAuthGoogle() {
-	conf.ClientID = viper.GetString("GOOGLE_CLIENT_ID")
-	conf.ClientSecret = viper.GetString("GOOGLE_CLIENT_SECRET")
-	oauthState = viper.GetString("GOOGLE_OAUTH_STATE")
-	conf.RedirectURL = viper.GetString("GOOGLE_CALLBACK_URL")
+	conf.ClientID = os.Getenv("GOOGLE_CLIENT_ID")
+	conf.ClientSecret = os.Getenv("GOOGLE_CLIENT_SECRET")
+	oauthState = os.Getenv("GOOGLE_OAUTH_STATE")
+	conf.RedirectURL = os.Getenv("GOOGLE_CALLBACK_URL")
 }
 
 func GetGoogleOauthState() (state string) {
