@@ -1,1 +1,1 @@
-web:tipo-server
+web: tipo-server
